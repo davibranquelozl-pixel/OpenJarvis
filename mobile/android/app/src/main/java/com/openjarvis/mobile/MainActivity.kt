@@ -180,16 +180,16 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val endpointField = EditText(this).apply {
             hint = "https://seu-servidor.onrender.com"
             setSingleLine(true)
-            setTextColor(TEXT)
-            setHintTextColor(MUTED)
+            setTextColor(0xFF182433.toInt())
+            setHintTextColor(0xFF607080.toInt())
             setText(getSharedPreferences(PREFS, MODE_PRIVATE).getString("endpoint", ""))
         }
         val keyField = EditText(this).apply {
             hint = if (sessionKey.isBlank()) "Chave OPENJARVIS_API_KEY" else "Chave salva apenas nesta sessão"
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             setSingleLine(true)
-            setTextColor(TEXT)
-            setHintTextColor(MUTED)
+            setTextColor(0xFF182433.toInt())
+            setHintTextColor(0xFF607080.toInt())
         }
         layout.addView(text("Endereço HTTPS do servidor", 12f, MUTED))
         layout.addView(endpointField)
