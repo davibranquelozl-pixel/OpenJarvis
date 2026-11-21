@@ -202,3 +202,16 @@ No decision is required to start the PWA audit. Before native implementation, co
 - Whether automatic model routing is opt-in (recommended).
 - Which external providers the user is willing to configure API credentials for.
 
+
+
+## Initial source audit (2026-11-20)
+
+The first read-only pass over the current frontend found:
+
+- The app already has a responsive sidebar drawer and a mobile backdrop. Selecting a route from the drawer did not close it on narrow screens. A small fix was committed on this roadmap branch so route selection and New Chat close the drawer below the 768 px desktop breakpoint.
+- The chat empty-state copy claimed the AI ran locally and was always available. That statement is not accurate for the current Render blueprint, which selects a cloud engine/model. The copy was changed to describe the configured models/tools without making a false local-execution or uptime promise.
+- The PWA manifest references `pwa-192x192.png` and `pwa-512x512.png`; both files are present in `frontend/public`. Their visual quality and generated production output have not yet been inspected.
+- Existing routes include Chat, Dashboard, Settings, Get Started, Data Sources, Agents, and Logs. The chat already has speech-input and text-to-speech components, but native Android background voice behavior is not implied by these web components.
+- The current frontend has a desktop-oriented Tauri integration. Android packaging and any native overlay still require a separate device build and compatibility test.
+
+Validation status: source changes are committed to this feature branch, but a frontend build, automated test run, Render deployment, and physical Android test have not yet been performed. Do not treat this branch as production-ready until those checks pass.
