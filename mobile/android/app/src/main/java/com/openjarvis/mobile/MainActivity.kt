@@ -15,8 +15,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -126,10 +124,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     )
 
     private fun startSpeechInput() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST
             )
             return
         }
@@ -142,6 +140,17 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             startActivityForResult(intent, SPEECH_REQUEST)
         } catch (_: Exception) {
             Toast.makeText(this, "Reconhecimento de voz indisponível neste aparelho.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == AUDIO_PERMISSION_REQUEST && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            startSpeechInput()
+        } else if (requestCode == AUDIO_PERMISSION_REQUEST) {
+            Toast.makeText(this, "Permissão de microfone não concedida.", Toast.LENGTH_SHORT).show()
         }
     }
 
