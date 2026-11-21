@@ -42,14 +42,23 @@ export function Sidebar() {
   const nextTheme = settings.theme === 'light' ? 'dark' : settings.theme === 'dark' ? 'system' : 'light';
 
   const messages = useAppStore((s) => s.messages);
+  const closeSidebarAfterMobileNavigation = () => {
+    // Match the md breakpoint used by the sidebar's fixed/relative layout.
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      useAppStore.getState().setSidebarOpen(false);
+    }
+  };
+
   const handleNewChat = () => {
     // Don't create a new chat if the current one is empty
     if (messages.length === 0) {
       navigate('/');
+      closeSidebarAfterMobileNavigation();
       return;
     }
     createConversation(selectedModel);
     navigate('/');
+    closeSidebarAfterMobileNavigation();
   };
 
   const navItems = [
@@ -198,7 +207,10 @@ export function Sidebar() {
               return (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => {
+                    navigate(item.path);
+                    closeSidebarAfterMobileNavigation();
+                  }}
                   className="relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors w-full text-left cursor-pointer"
                   style={{
                     background: isActive ? 'var(--color-accent-subtle)' : 'transparent',
