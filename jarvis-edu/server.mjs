@@ -35,6 +35,16 @@ const json = (res, status, data, origin) => {
   res.writeHead(status, headers); res.end(JSON.stringify(data));
 };
 const readBody = req => new Promise((resolve,reject)=>{let s="";req.on("data",c=>{s+=c;if(s.length>8_000_000){reject(new Error("Corpo muito grande"));req.destroy()}});req.on("end",()=>{try{resolve(JSON.parse(s||"{}"))}catch{reject(new Error("JSON inválido"))}});req.on("error",reject)});
+const validateImageData = data => {
+  const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(data);
+  if (!match) return "Imagem inválida. Use PNG, JPEG ou WebP.";
+  const bytes = Buffer.from(match[2], "base64");
+  if (!bytes.length || bytes.length > 5 * 1024 * 1024 || bytes.toString("base64") !== match[2]) return "Imagem inválida ou maior que 5 MB.";
+  const isPng = match[1] === "png" && bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+  const isJpeg = match[1] === "jpeg" && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+  const isWebp = match[1] === "webp" && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
+  return isPng || isJpeg || isWebp ? null : "O conteúdo do arquivo não corresponde ao formato informado.";
+};
 const server = http.createServer(async (req,res)=>{
   if(req.method==="OPTIONS"){const origin=req.headers.origin||"";if(!allowedOrigin(origin)){res.writeHead(403);return res.end()}res.writeHead(204,{"access-control-allow-origin":origin,"access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS","vary":"Origin"});return res.end()}
   const url=new URL(req.url,"http://localhost");
@@ -54,13 +64,13 @@ const server = http.createServer(async (req,res)=>{
       const body=await readBody(req);const task=String(body.task||"").trim();const imageData=typeof body.image==="string"?body.image:"";
       if(!task&&!imageData)return json(res,400,{error:"Envie um enunciado ou uma imagem"},origin);
       if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"},origin);
-      if(imageData && (imageData.length>7_000_000 || !["data:image/png;base64,","data:image/jpeg;base64,","data:image/webp;base64,"].some(prefix=>imageData.startsWith(prefix))))return json(res,400,{error:"Imagem inválida ou maior que 5 MB. Use PNG, JPEG ou WebP."},origin);
+      if(body.image!==undefined && body.image!==null && typeof body.image!=="string")return json(res,400,{error:"Imagem inválida."},origin);\n      if(imageData){const imageError=validateImageData(imageData);if(imageError)return json(res,400,{error:imageError},origin);}
       if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."},origin);
       const modes={explain:"Explique o conteúdo passo a passo, com linguagem adequada a um estudante. Termine com uma síntese.",draft:"Elabore uma resposta inicial correta e clara, explique brevemente o raciocínio e destaque o que o estudante deve conferir.",code:"Produza uma solução de código funcional. Inclua o código completo, explique como executar e indique limitações.",check:"Revise a tentativa do estudante. Identifique erros, explique por que ocorrem e proponha correções."};
       const prompt="Plataforma: "+String(body.platform||"Não informada")+" | Tarefa: "+task;
       const userContent=[{type:"text",text:(modes[body.mode]||modes.explain)+String.fromCharCode(10,10)+prompt}];
       if(imageData)userContent.push({type:"image_url",image_url:{url:imageData}});
-      const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:userContent}]})});
+      const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},signal:AbortSignal.timeout(90000),body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:userContent}]})});
       const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"},origin);return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."},origin);
     }catch(e){return json(res,500,{error:"Falha interna: "+e.message},origin)}
   }
