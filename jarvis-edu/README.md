@@ -17,11 +17,11 @@ Jarvis EDU is an assistive study workspace: a responsive web app, a Manifest V3 
 cd jarvis-edu
 cp .env.example .env
 # Set AI_API_KEY and optionally AI_MODEL in .env
-node server.mjs
+npm start
 ```
 Open http://localhost:8787
 
-The server uses Node's built-in modules only. Environment variables are loaded by Node 20.6+ with `node --env-file=.env server.mjs`; alternatively export them in your shell and run `node server.mjs`.
+The server uses Node's built-in modules only. Environment variables are loaded by Node 20.6+ with `node --env-file=.env server.mjs`; alternatively export them in your shell and run `npm start`.
 
 ## Load the extension
 1. Open `chrome://extensions`.
@@ -43,3 +43,9 @@ The server uses Node's built-in modules only. Environment variables are loaded b
 
 ## Configuration
 See `.env.example`. Never commit real API keys or student credentials.
+
+## Security and deployment
+
+The server is intentionally local-first and binds to 127.0.0.1 by default. Do not expose it directly to the public internet. The included Compose file binds the host port to 127.0.0.1. Remote deployment is not enabled until authentication, HTTPS, per-user authorization, rate limits, and managed secrets are implemented. See [SECURITY.md](SECURITY.md).
+
+Run `npm test` for smoke tests. For local Docker use `docker compose up`.
