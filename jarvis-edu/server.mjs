@@ -64,7 +64,8 @@ const server = http.createServer(async (req,res)=>{
       const body=await readBody(req);const task=String(body.task||"").trim();const imageData=typeof body.image==="string"?body.image:"";
       if(!task&&!imageData)return json(res,400,{error:"Envie um enunciado ou uma imagem"},origin);
       if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"},origin);
-      if(body.image!==undefined && body.image!==null && typeof body.image!=="string")return json(res,400,{error:"Imagem inválida."},origin);\n      if(imageData){const imageError=validateImageData(imageData);if(imageError)return json(res,400,{error:imageError},origin);}
+      if(body.image!==undefined && body.image!==null && typeof body.image!=="string")return json(res,400,{error:"Imagem inválida."},origin);
+      if(imageData){const imageError=validateImageData(imageData);if(imageError)return json(res,400,{error:imageError},origin);}
       if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."},origin);
       const modes={explain:"Explique o conteúdo passo a passo, com linguagem adequada a um estudante. Termine com uma síntese.",draft:"Elabore uma resposta inicial correta e clara, explique brevemente o raciocínio e destaque o que o estudante deve conferir.",code:"Produza uma solução de código funcional. Inclua o código completo, explique como executar e indique limitações.",check:"Revise a tentativa do estudante. Identifique erros, explique por que ocorrem e proponha correções."};
       const prompt="Plataforma: "+String(body.platform||"Não informada")+" | Tarefa: "+task;
@@ -72,7 +73,7 @@ const server = http.createServer(async (req,res)=>{
       if(imageData)userContent.push({type:"image_url",image_url:{url:imageData}});
       const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},signal:AbortSignal.timeout(90000),body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:userContent}]})});
       const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"},origin);return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."},origin);
-    }catch(e){return json(res,500,{error:"Falha interna: "+e.message},origin)}
+    }catch(e){if(e.name==="TimeoutError"||e.name==="AbortError")return json(res,504,{error:"O provedor de IA demorou demais. Tente novamente."},origin);return json(res,500,{error:"Falha interna ao processar a solicitação."},origin)}
   }
   res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found");
 });
