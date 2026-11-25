@@ -98,5 +98,5 @@ test("PWA manifest and service worker are served", async () => {
   assert.equal((await manifest.json()).short_name, "Jarvis EDU");
   const worker = await fetch(base + "/sw.js");
   assert.equal(worker.status, 200);
-  assert.match(await worker.text(), /service-worker/);
+  assert.match(await worker.text(), /addEventListener/);
 });
