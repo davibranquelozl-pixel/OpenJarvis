@@ -91,3 +91,12 @@ test("invalid image formats are rejected before provider calls", async () => {
   });
   assert.equal(response.status, 400);
 });
+
+test("PWA manifest and service worker are served", async () => {
+  const manifest = await fetch(base + "/manifest.webmanifest");
+  assert.equal(manifest.status, 200);
+  assert.equal((await manifest.json()).short_name, "Jarvis EDU");
+  const worker = await fetch(base + "/sw.js");
+  assert.equal(worker.status, 200);
+  assert.match(await worker.text(), /service-worker/);
+});
