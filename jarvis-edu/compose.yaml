@@ -1,0 +1,15 @@
+services:
+  jarvis-edu:
+    image: node:22-alpine
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    env_file:
+      - .env
+    environment:
+      PORT: "8787"
+      HOST: "0.0.0.0"
+    volumes:
+      - ./:/app:ro
+    ports:
+      - "127.0.0.1:8787:8787"
+    restart: unless-stopped
