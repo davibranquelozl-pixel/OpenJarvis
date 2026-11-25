@@ -1,0 +1,51 @@
+import http from "node:http";
+
+const PORT = Number(process.env.PORT || 8787);
+const API_KEY = process.env.AI_API_KEY || "";
+const BASE_URL = (process.env.AI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+const MODEL = process.env.AI_MODEL || "gpt-4.1-mini";
+let importedTask = null;
+
+const appHtml = `<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080d18"><title>Jarvis EDU</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,Arial;background:#080d18;color:#edf3ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#142b4c 0,transparent 38%),#080d18;min-height:100vh}.wrap{max-width:1080px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:22px;font-weight:800;letter-spacing:.08em}.brand span{color:#55b7ff}.pill{border:1px solid #24527b;color:#91d2ff;border-radius:99px;padding:7px 11px;font-size:12px}.hero{padding:42px 0 24px}.hero h1{font-size:clamp(30px,6vw,54px);margin:0 0 10px}.muted{color:#9eacc3;line-height:1.6}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.panel{background:#101a2b;border:1px solid #23344d;border-radius:18px;padding:20px;box-shadow:0 12px 40px #0003}.panel h2{margin:0 0 14px;font-size:17px}label{display:block;font-size:13px;color:#b9c8df;margin:12px 0 7px}textarea,select,input{width:100%;background:#091321;color:#edf3ff;border:1px solid #2a3d58;border-radius:11px;padding:12px;font:inherit}textarea{min-height:150px;resize:vertical}button{border:0;border-radius:11px;padding:12px 16px;background:#1685dc;color:white;font-weight:700;cursor:pointer}button.secondary{background:#23344d}button:disabled{opacity:.5;cursor:wait}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.out{white-space:pre-wrap;line-height:1.6;background:#091321;border:1px solid #263a55;border-radius:12px;padding:14px;min-height:110px;margin-top:12px}.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tile{background:#0b1525;border:1px solid #263a55;padding:14px;border-radius:13px}.tile b{display:block;margin-bottom:5px}.small{font-size:12px;color:#9eacc3}.status{font-size:13px;color:#8bd5a8;margin-top:10px}.footer{margin-top:18px;font-size:12px;color:#8494ad}@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:18px 13px}.hero{padding-top:30px}}
+</style></head><body><main class="wrap"><header class="top"><div class="brand">JARVIS <span>EDU</span></div><div class="pill">STUDY ASSISTANT · LOCAL</div></header>
+<section class="hero"><h1>Aprender. Resolver. Construir.</h1><p class="muted">Seu espaço de estudos para compreender atividades, revisar respostas e criar códigos com apoio de IA. Você mantém a decisão final.</p></section>
+<div class="grid"><section class="panel"><h2>✦ Central de atividades</h2><label for="platform">Plataforma</label><select id="platform"><option>Sala do Futuro</option><option>Alura</option><option>Khan Academy</option><option>Matific</option><option>Outra</option></select><label for="task">Enunciado, pergunta ou requisito de código</label><textarea id="task" placeholder="Cole aqui o texto da atividade ou importe um trecho selecionado pela extensão..."></textarea><label for="mode">O que o Jarvis deve fazer?</label><select id="mode"><option value="explain">Explicar passo a passo</option><option value="draft">Criar uma resposta inicial para eu revisar</option><option value="code">Criar ou corrigir código</option><option value="check">Revisar minha tentativa e apontar erros</option></select><div class="actions"><button id="run">Analisar atividade</button><button class="secondary" id="save">Salvar tarefa</button></div><div id="status" class="status" role="status"></div><div id="output" class="out" aria-live="polite">A resposta aparecerá aqui.</div><div class="actions"><button class="secondary" id="copy">Copiar resultado</button></div></section>
+<aside class="panel"><h2>▦ Módulos</h2><div class="tiles"><div class="tile"><b>Leitura</b><span class="small">Texto selecionado com sua autorização.</span></div><div class="tile"><b>Programação</b><span class="small">HTML, CSS, JS e Python.</span></div><div class="tile"><b>Explicação</b><span class="small">Etapas e conceitos essenciais.</span></div><div class="tile"><b>Revisão</b><span class="small">Checagem de lógica e clareza.</span></div></div><h2 style="margin-top:22px">Tarefas salvas</h2><div id="tasks" class="small">Nenhuma tarefa salva.</div><p class="footer">A extensão importa somente o texto que você seleciona e confirma. Envios em plataformas escolares permanecem sob sua responsabilidade.</p></aside></div>
+<p class="footer">Jarvis EDU · Protótipo funcional · Dados de tarefas ficam neste navegador.</p></main>
+<script>
+const $=id=>document.getElementById(id);let tasks=JSON.parse(localStorage.getItem("jarvisEduTasks")||"[]");
+function render(){ $("tasks").innerHTML=tasks.length?tasks.slice(-6).reverse().map(t=>'<div class="tile" style="margin:7px 0"><b>'+esc(t.platform)+'</b><span>'+esc(t.text.slice(0,100))+'</span></div>').join(""):"Nenhuma tarefa salva."}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("save").onclick=()=>{const text=$("task").value.trim();if(!text)return $("status").textContent="Cole uma atividade antes de salvar.";tasks.push({platform:$("platform").value,text,at:Date.now()});localStorage.setItem("jarvisEduTasks",JSON.stringify(tasks));render();$("status").textContent="Tarefa salva neste navegador."};
+$("run").onclick=async()=>{const task=$("task").value.trim();if(!task)return $("status").textContent="Adicione o enunciado primeiro.";const b=$("run");b.disabled=true;$("status").textContent="Analisando...";try{const r=await fetch("/api/assist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task,platform:$("platform").value,mode:$("mode").value})});const d=await r.json();if(!r.ok)throw Error(d.error||"Falha na solicitação");$("output").textContent=d.answer;$("status").textContent="Pronto. Revise a resposta antes de usar."}catch(e){$("status").textContent=e.message}finally{b.disabled=false}};
+$("copy").onclick=async()=>{await navigator.clipboard.writeText($("output").textContent);$("status").textContent="Resultado copiado."};
+(async()=>{try{const r=await fetch("/api/imported");const d=await r.json();if(d.task){$("task").value=d.task;$("status").textContent="Texto selecionado importado da extensão."}}catch{}render()})();
+</script></body></html>`;
+
+const json = (res, status, data) => { res.writeHead(status, {"content-type":"application/json; charset=utf-8","access-control-allow-origin":"chrome-extension://*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"}); res.end(JSON.stringify(data)); };
+const readBody = req => new Promise((resolve,reject)=>{let s="";req.on("data",c=>{s+=c;if(s.length>100_000){reject(new Error("Corpo muito grande"));req.destroy()}});req.on("end",()=>{try{resolve(JSON.parse(s||"{}"))}catch{reject(new Error("JSON inválido"))}});req.on("error",reject)});
+const server = http.createServer(async (req,res)=>{
+  if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"});return res.end()}
+  const url=new URL(req.url,"http://localhost");
+  if(req.method==="GET"&&url.pathname==="/"){res.writeHead(200,{"content-type":"text/html; charset=utf-8","cache-control":"no-store"});return res.end(appHtml)}
+  if(req.method==="GET"&&url.pathname==="/api/health")return json(res,200,{ok:true,aiConfigured:Boolean(API_KEY),model:MODEL});
+  if(req.method==="GET"&&url.pathname==="/api/imported")return json(res,200,{task:importedTask});
+  if(req.method==="POST"&&url.pathname==="/api/import"){
+    try{const body=await readBody(req);if(typeof body.text!=="string"||!body.text.trim())return json(res,400,{error:"Texto vazio"});importedTask=body.text.slice(0,12000);return json(res,200,{ok:true})}catch(e){return json(res,400,{error:e.message})}
+  }
+  if(req.method==="POST"&&url.pathname==="/api/assist"){
+    try{
+      const body=await readBody(req);const task=String(body.task||"").trim();if(!task)return json(res,400,{error:"A atividade está vazia"});if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"});
+      if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."});
+      const modes={explain:"Explique o conteúdo passo a passo, com linguagem adequada a um estudante. Termine com uma síntese.",draft:"Elabore uma resposta inicial correta e clara, explique brevemente o raciocínio e destaque o que o estudante deve conferir.",code:"Produza uma solução de código funcional. Inclua o código completo, explique como executar e indique limitações.",check:"Revise a tentativa do estudante. Identifique erros, explique por que ocorrem e proponha correções."};
+      const prompt="Plataforma: "+String(body.platform||"Não informada")+"\nTarefa: "+task;
+      const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:modes[body.mode]||modes.explain+"\n"+prompt}]})});
+      const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"});return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."});
+    }catch(e){return json(res,500,{error:"Falha interna: "+e.message})}
+  }
+  res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found");
+});
+server.listen(PORT,"127.0.0.1",()=>console.log("Jarvis EDU em http://localhost:"+PORT));
