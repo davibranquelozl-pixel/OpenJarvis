@@ -16,7 +16,7 @@ async function freePort() {
 
 before(async () => {
   const port = await freePort();
-  base = `http://localhost:${port}`;
+  base = `http://127.0.0.1:${port}`;
   child = spawn(process.execPath, ["server.mjs"], {
     cwd: new URL("..", import.meta.url),
     env: { ...process.env, PORT: String(port), AI_API_KEY: "" },
@@ -81,4 +81,13 @@ test("AI route clearly reports missing local configuration", async () => {
   });
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /AI_API_KEY/);
+});
+
+test("invalid image formats are rejected before provider calls", async () => {
+  const response = await fetch(base + "/api/assist", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ image: "data:image/gif;base64,R0lGODlh" })
+  });
+  assert.equal(response.status, 400);
 });
