@@ -25,25 +25,32 @@ $("copy").onclick=async()=>{await navigator.clipboard.writeText($("output").text
 (async()=>{try{const r=await fetch("/api/imported");const d=await r.json();if(d.task){$("task").value=d.task;$("status").textContent="Texto selecionado importado da extensão."}}catch{}render()})();
 </script></body></html>`;
 
-const json = (res, status, data) => { res.writeHead(status, {"content-type":"application/json; charset=utf-8","access-control-allow-origin":"*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"}); res.end(JSON.stringify(data)); };
+const allowedOrigin = origin => !origin || origin === "http://localhost:8787" || origin === "http://127.0.0.1:8787" || /^chrome-extension:\/\/[a-p]{32}$/.test(origin);
+const json = (res, status, data, origin) => {
+  const headers = {"content-type":"application/json; charset=utf-8","vary":"Origin"};
+  if (origin && allowedOrigin(origin)) headers["access-control-allow-origin"] = origin;
+  res.writeHead(status, headers); res.end(JSON.stringify(data));
+};
 const readBody = req => new Promise((resolve,reject)=>{let s="";req.on("data",c=>{s+=c;if(s.length>100_000){reject(new Error("Corpo muito grande"));req.destroy()}});req.on("end",()=>{try{resolve(JSON.parse(s||"{}"))}catch{reject(new Error("JSON inválido"))}});req.on("error",reject)});
 const server = http.createServer(async (req,res)=>{
-  if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"});return res.end()}
+  if(req.method==="OPTIONS"){const origin=req.headers.origin||"";if(!allowedOrigin(origin)){res.writeHead(403);return res.end()}res.writeHead(204,{"access-control-allow-origin":origin,"access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS","vary":"Origin"});return res.end()}
   const url=new URL(req.url,"http://localhost");
+  const origin=req.headers.origin||"";
+  if(!allowedOrigin(origin)){res.writeHead(403,{"content-type":"application/json; charset=utf-8"});return res.end(JSON.stringify({error:"Origem não autorizada"}))}
   if(req.method==="GET"&&url.pathname==="/"){res.writeHead(200,{"content-type":"text/html; charset=utf-8","cache-control":"no-store"});return res.end(appHtml)}
-  if(req.method==="GET"&&url.pathname==="/api/health")return json(res,200,{ok:true,aiConfigured:Boolean(API_KEY),model:MODEL});
-  if(req.method==="GET"&&url.pathname==="/api/imported")return json(res,200,{task:importedTask});
+  if(req.method==="GET"&&url.pathname==="/api/health")return json(res,200,{ok:true,aiConfigured:Boolean(API_KEY),model:MODEL},origin);
+  if(req.method==="GET"&&url.pathname==="/api/imported")return json(res,200,{task:importedTask},origin);
   if(req.method==="POST"&&url.pathname==="/api/import"){
-    try{const body=await readBody(req);if(typeof body.text!=="string"||!body.text.trim())return json(res,400,{error:"Texto vazio"});importedTask=body.text.slice(0,12000);return json(res,200,{ok:true})}catch(e){return json(res,400,{error:e.message})}
+    try{const body=await readBody(req);if(typeof body.text!=="string"||!body.text.trim())return json(res,400,{error:"Texto vazio"},origin);importedTask=body.text.slice(0,12000);return json(res,200,{ok:true},origin)}catch(e){return json(res,400,{error:e.message},origin)}
   }
   if(req.method==="POST"&&url.pathname==="/api/assist"){
     try{
-      const body=await readBody(req);const task=String(body.task||"").trim();if(!task)return json(res,400,{error:"A atividade está vazia"});if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"});
-      if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."});
+      const body=await readBody(req);const task=String(body.task||"").trim();if(!task)return json(res,400,{error:"A atividade está vazia"},origin);if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"},origin);
+      if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."},origin);
       const modes={explain:"Explique o conteúdo passo a passo, com linguagem adequada a um estudante. Termine com uma síntese.",draft:"Elabore uma resposta inicial correta e clara, explique brevemente o raciocínio e destaque o que o estudante deve conferir.",code:"Produza uma solução de código funcional. Inclua o código completo, explique como executar e indique limitações.",check:"Revise a tentativa do estudante. Identifique erros, explique por que ocorrem e proponha correções."};
       const prompt="Plataforma: "+String(body.platform||"Não informada")+"\nTarefa: "+task;
       const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:(modes[body.mode]||modes.explain)+"\n\n"+prompt}]})});
-      const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"});return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."});
+      const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"},origin);return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."},origin);
     }catch(e){return json(res,500,{error:"Falha interna: "+e.message})}
   }
   res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found");
