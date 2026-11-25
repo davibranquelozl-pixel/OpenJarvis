@@ -1,12 +1,8 @@
 name: Jarvis EDU CI
 on:
   pull_request:
-    paths:
-      - "jarvis-edu/**"
   push:
     branches: [main, "feat/jarvis-edu"]
-    paths:
-      - "jarvis-edu/**"
 permissions:
   contents: read
 jobs:
