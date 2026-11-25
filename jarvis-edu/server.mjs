@@ -66,4 +66,4 @@ const server = http.createServer(async (req,res)=>{
   }
   res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found");
 });
-server.listen(PORT,process.env.HOST||"localhost",()=>console.log("Jarvis EDU em http://localhost:"+PORT));
+server.listen(PORT,HOST,()=>console.log("Jarvis EDU em http://"+(HOST==="0.0.0.0"?"localhost":HOST)+":"+PORT));
