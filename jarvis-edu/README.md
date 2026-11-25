@@ -55,7 +55,8 @@ The web app works on Android through the PWA. The Chrome extension is for deskto
 - Task workspace with platform tagging, local browser storage, JSON export, and clear-history controls.
 - AI-assisted explanation, draft answer, code generation, and screenshot analysis through a multimodal OpenAI-compatible endpoint.
 - Selected-text capture through an explicit extension action.
-- Optional PNG/JPEG/WebP screenshot input (up to 5 MB), processed in memory and not stored by the server.
+- Optional PNG/JPEG/WebP screenshot input (up to 5 MB), with base64, size, and file-signature validation; processed in memory and not stored by the server.
+- AI provider requests have a 90-second timeout and return a safe timeout message.
 - Health endpoint and configurable local AI provider.
 
 ## Roadmap
