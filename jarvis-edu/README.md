@@ -37,8 +37,9 @@ When opened from `localhost` or an HTTPS host, Jarvis EDU can be installed from 
 
 ## Current capabilities
 - Task workspace with platform tagging and local browser storage.
-- AI-assisted explanation, draft answer, and code generation through an OpenAI-compatible endpoint.
+- AI-assisted explanation, draft answer, code generation, and screenshot analysis through a multimodal OpenAI-compatible endpoint.
 - Selected-text capture through an explicit extension action.
+- Optional PNG/JPEG/WebP screenshot input (up to 5 MB), processed in memory and not stored by the server.
 - Health endpoint and configurable local AI provider.
 
 ## Roadmap
