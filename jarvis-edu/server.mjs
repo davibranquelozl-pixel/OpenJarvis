@@ -1,6 +1,7 @@
 import http from "node:http";
 
 const PORT = Number(process.env.PORT || 8787);
+const HOST = process.env.HOST || "127.0.0.1";
 const API_KEY = process.env.AI_API_KEY || "";
 const BASE_URL = (process.env.AI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
 const MODEL = process.env.AI_MODEL || "gpt-4.1-mini";
