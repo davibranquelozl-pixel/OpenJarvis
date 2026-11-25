@@ -25,7 +25,7 @@ $("copy").onclick=async()=>{await navigator.clipboard.writeText($("output").text
 (async()=>{try{const r=await fetch("/api/imported");const d=await r.json();if(d.task){$("task").value=d.task;$("status").textContent="Texto selecionado importado da extensão."}}catch{}render()})();
 </script></body></html>`;
 
-const json = (res, status, data) => { res.writeHead(status, {"content-type":"application/json; charset=utf-8","access-control-allow-origin":"chrome-extension://*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"}); res.end(JSON.stringify(data)); };
+const json = (res, status, data) => { res.writeHead(status, {"content-type":"application/json; charset=utf-8","access-control-allow-origin":"*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"}); res.end(JSON.stringify(data)); };
 const readBody = req => new Promise((resolve,reject)=>{let s="";req.on("data",c=>{s+=c;if(s.length>100_000){reject(new Error("Corpo muito grande"));req.destroy()}});req.on("end",()=>{try{resolve(JSON.parse(s||"{}"))}catch{reject(new Error("JSON inválido"))}});req.on("error",reject)});
 const server = http.createServer(async (req,res)=>{
   if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-headers":"content-type","access-control-allow-methods":"GET,POST,OPTIONS"});return res.end()}
