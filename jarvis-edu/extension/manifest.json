@@ -3,7 +3,7 @@
   "name": "Jarvis EDU — Importador de texto",
   "version": "0.1.0",
   "description": "Importa texto selecionado pelo estudante para o Jarvis EDU local.",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "scripting"],
   "host_permissions": ["http://localhost:8787/*"],
   "action": {
     "default_title": "Jarvis EDU",
