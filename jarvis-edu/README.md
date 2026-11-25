@@ -52,7 +52,7 @@ The web app works on Android through the PWA. The Chrome extension is for deskto
 6. Open Jarvis EDU at http://localhost:8787 and review the imported task.
 
 ## Current capabilities
-- Task workspace with platform tagging and local browser storage.
+- Task workspace with platform tagging, local browser storage, JSON export, and clear-history controls.
 - AI-assisted explanation, draft answer, code generation, and screenshot analysis through a multimodal OpenAI-compatible endpoint.
 - Selected-text capture through an explicit extension action.
 - Optional PNG/JPEG/WebP screenshot input (up to 5 MB), processed in memory and not stored by the server.
