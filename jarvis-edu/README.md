@@ -59,10 +59,13 @@ The web app works on Android through the PWA. The Chrome extension is for deskto
 - Health endpoint and configurable local AI provider.
 
 ## Roadmap
-- Add platform-specific adapters only after verifying official APIs, permissions, and terms.
-- Add platform adapters only when official APIs and permissions are verified.
+- Add platform-specific adapters only after verifying official APIs, permissions, school policies, and terms. Current platforms are labels and user-driven text import, not direct integrations.
 - Add authentication, encrypted secrets, and user-controlled task history before any remote deployment.
 - Add accessibility, export, and teacher-approved classroom workflows.
+
+## Integration status
+
+Alura, Sala do Futuro, Khan Academy, and Matific can be selected as task labels. This release does not log in to these services, read their private pages automatically, or submit work. See [PLATFORM-INTEGRATIONS.md](PLATFORM-INTEGRATIONS.md) for the reviewed public API status and references.
 
 ## Configuration
 See `.env.example`. Never commit real API keys or student credentials.
