@@ -16,7 +16,7 @@ async function freePort() {
 
 before(async () => {
   const port = await freePort();
-  base = `http://127.0.0.1:${port}`;
+  base = `http://localhost:${port}`;
   child = spawn(process.execPath, ["server.mjs"], {
     cwd: new URL("..", import.meta.url),
     env: { ...process.env, PORT: String(port), AI_API_KEY: "" },
