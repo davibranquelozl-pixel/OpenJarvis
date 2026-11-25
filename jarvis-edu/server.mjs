@@ -49,7 +49,10 @@ const server = http.createServer(async (req,res)=>{
   }
   if(req.method==="POST"&&url.pathname==="/api/assist"){
     try{
-      const body=await readBody(req);const task=String(body.task||"").trim();if(!task)return json(res,400,{error:"A atividade está vazia"},origin);if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"},origin);
+      const body=await readBody(req);const task=String(body.task||"").trim();const imageData=typeof body.imageData==="string"?body.imageData:"";const imageType=String(body.imageType||"");
+      if(!task&&!imageData)return json(res,400,{error:"Envie um enunciado ou uma imagem"},origin);
+      if(task.length>12000)return json(res,413,{error:"Limite de 12.000 caracteres"},origin);
+      if(imageData && (!/^data:image\\/(png|jpeg|webp);base64,/.test(imageData) || imageData.length>8_000_000))return json(res,400,{error:"Imagem inválida ou maior que o limite de 6 MB. Use PNG, JPG ou WebP."},origin);
       if(!API_KEY)return json(res,503,{error:"IA não configurada. Defina AI_API_KEY no arquivo .env; o organizador local continua disponível."},origin);
       const modes={explain:"Explique o conteúdo passo a passo, com linguagem adequada a um estudante. Termine com uma síntese.",draft:"Elabore uma resposta inicial correta e clara, explique brevemente o raciocínio e destaque o que o estudante deve conferir.",code:"Produza uma solução de código funcional. Inclua o código completo, explique como executar e indique limitações.",check:"Revise a tentativa do estudante. Identifique erros, explique por que ocorrem e proponha correções."};
       const prompt="Plataforma: "+String(body.platform||"Não informada")+" | Tarefa: "+task;
