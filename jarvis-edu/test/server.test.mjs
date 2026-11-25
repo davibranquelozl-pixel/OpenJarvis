@@ -92,6 +92,24 @@ test("invalid image formats are rejected before provider calls", async () => {
   assert.equal(response.status, 400);
 });
 
+test("image content must match its declared MIME type", async () => {
+  const fakePng = Buffer.from("GIF89a-not-a-png").toString("base64");
+  const response = await fetch(base + "/api/assist", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ image: "data:image/png;base64," + fakePng })
+  });
+  assert.equal(response.status, 400);
+  assert.match((await response.json()).error, /não corresponde/);
+});
+
+test("allowed extension origins receive the matching CORS header", async () => {
+  const origin = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
+  const response = await fetch(base + "/api/health", { headers: { origin } });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("access-control-allow-origin"), origin);
+});
+
 test("PWA manifest and service worker are served", async () => {
   const manifest = await fetch(base + "/manifest.webmanifest");
   assert.equal(manifest.status, 200);
