@@ -62,7 +62,7 @@ const server = http.createServer(async (req,res)=>{
       if(imageData)userContent.push({type:"image_url",image_url:{url:imageData}});
       const response=await fetch(BASE_URL+"/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Você é Jarvis EDU, tutor acadêmico. Seja preciso, didático e honesto. Não ajude a burlar avaliações, detectores ou controles de plataforma. Ensine o raciocínio; não afirme ter enviado ou concluído atividades."},{role:"user",content:userContent}]})});
       const data=await response.json();if(!response.ok)return json(res,502,{error:data.error?.message||"Erro do provedor de IA"},origin);return json(res,200,{answer:data.choices?.[0]?.message?.content||"Sem resposta do provedor."},origin);
-    }catch(e){return json(res,500,{error:"Falha interna: "+e.message})}
+    }catch(e){return json(res,500,{error:"Falha interna: "+e.message},origin)}
   }
   res.writeHead(404,{"content-type":"text/plain; charset=utf-8"});res.end("Not found");
 });
