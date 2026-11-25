@@ -27,6 +27,22 @@ The server uses Node's built-in modules only. `npm start` loads `.env` with Node
 
 When opened from `localhost` or an HTTPS host, Jarvis EDU can be installed from the browser menu using **Install app** or **Add to Home screen**. The app shell is cached for offline display; AI requests still require the local server and network access.
 
+## Run on Android with Termux
+
+1. Install Termux from its official F-Droid or GitHub distribution (avoid outdated Play Store builds).
+2. In Termux run:
+   ```bash
+   pkg update && pkg install nodejs-lts git
+   git clone --branch feat/jarvis-edu --single-branch https://github.com/davibranquelozl-pixel/OpenJarvis.git
+   cd OpenJarvis/jarvis-edu
+   cp .env.example .env
+   bash scripts/start-android.sh
+   ```
+3. Open `http://localhost:8787` in Android Chrome.
+4. Use the browser menu to **Add to Home screen** or **Install app**.
+
+The web app works on Android through the PWA. The Chrome extension is for desktop Chromium browsers; Chrome for Android does not support desktop extensions. The AI assistant requires your own compatible API key in the private `.env` file; never send that key in chat or commit it to GitHub.
+
 ## Load the extension
 1. Use desktop Google Chrome or another Chromium browser with Manifest V3 extension support. Chrome for Android does not support desktop extensions.
 2. Open `chrome://extensions`.
