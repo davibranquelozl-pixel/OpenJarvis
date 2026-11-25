@@ -23,12 +23,17 @@ Open http://localhost:8787
 
 The server uses Node's built-in modules only. `npm start` loads `.env` with Node 22.9+.
 
+## Install as an app (PWA)
+
+When opened from `localhost` or an HTTPS host, Jarvis EDU can be installed from the browser menu using **Install app** or **Add to Home screen**. The app shell is cached for offline display; AI requests still require the local server and network access.
+
 ## Load the extension
-1. Open `chrome://extensions`.
-2. Enable Developer mode.
-3. Choose **Load unpacked** and select `jarvis-edu/extension`.
-4. Open a supported learning page, select the text you want help with, click the extension icon, then **Import selected text**.
-5. Open Jarvis EDU at http://localhost:8787 and review the imported task.
+1. Use desktop Google Chrome or another Chromium browser with Manifest V3 extension support. Chrome for Android does not support desktop extensions.
+2. Open `chrome://extensions`.
+3. Enable Developer mode.
+4. Choose **Load unpacked** and select `jarvis-edu/extension`.
+5. Open a supported learning page, select the text you want help with, click the extension icon, then **Import selected text**.
+6. Open Jarvis EDU at http://localhost:8787 and review the imported task.
 
 ## Current capabilities
 - Task workspace with platform tagging and local browser storage.
