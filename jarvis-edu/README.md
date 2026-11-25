@@ -9,7 +9,7 @@ Jarvis EDU is an assistive study workspace: a responsive web app, a Manifest V3 
 - Use official APIs and permitted integrations; platform adapters remain opt-in and must respect terms of service.
 
 ## Requirements
-- Node.js 20+
+- Node.js 22.9+
 - An OpenAI-compatible API key (optional; without it, the UI and local task organizer still work).
 
 ## Run locally
@@ -21,7 +21,7 @@ npm start
 ```
 Open http://localhost:8787
 
-The server uses Node's built-in modules only. Environment variables are loaded by Node 20.6+ with `node --env-file=.env server.mjs`; alternatively export them in your shell and run `npm start`.
+The server uses Node's built-in modules only. `npm start` loads `.env` with Node 22.9+.
 
 ## Load the extension
 1. Open `chrome://extensions`.
@@ -38,7 +38,8 @@ The server uses Node's built-in modules only. Environment variables are loaded b
 
 ## Roadmap
 - Add platform-specific adapters only after verifying official APIs, permissions, and terms.
-- Add tests, authentication for remote deployment, encrypted secrets, and user-controlled task history.
+- Add platform adapters only when official APIs and permissions are verified.
+- Add authentication, encrypted secrets, and user-controlled task history before any remote deployment.
 - Add accessibility, export, and teacher-approved classroom workflows.
 
 ## Configuration
